@@ -19,15 +19,20 @@ function App() {
       do {
         models = await tcapi.viewer.getModels();
       } while (models === undefined || models.length === 0);
-      console.log(ifcGuid);
+      console.log(models);
       var asm;
       var modelId;
       for (const model of models) {
-        await tcapi.viewer.toggleModel(model.id, true, true);
+        const loadedModel = await tcapi.viewer.getLoadedModel(model.id);
+        if (loadedModel === undefined) {
+          await tcapi.viewer.toggleModel(model.id, true);
+        }
+
         var modelObjects;
         do {
           modelObjects = await tcapi.viewer.getObjects();
         } while (modelObjects === undefined || modelObjects.length === 0);
+        console.log(modelObjects);
         const runtimeIds = await tcapi.viewer.convertToObjectRuntimeIds(
           model.id,
           [ifcGuid]
