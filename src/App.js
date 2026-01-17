@@ -52,7 +52,14 @@ function App() {
       }
       console.log(asm);
       console.log(modelId);
-
+      tcapi.viewer.setCamera({
+        modelObjectIds: [
+          {
+            modelId: modelId,
+            objectRuntimeIds: [asm],
+          },
+        ],
+      });
       tcapi.viewer.setSelection({
         modelObjectIds: [
           {
@@ -67,15 +74,6 @@ function App() {
           entityIds: [asm],
         },
       ]);
-
-      tcapi.viewer.setCamera({
-        modelObjectIds: [
-          {
-            modelId: modelId,
-            objectRuntimeIds: [asm],
-          },
-        ],
-      });
     }
     fetchData();
   }, []);
