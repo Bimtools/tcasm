@@ -74,6 +74,14 @@ function App() {
           entityIds: [asm],
         },
       ]);
+      tcapi.viewer.setCamera({
+        modelObjectIds: [
+          {
+            modelId: modelId,
+            objectRuntimeIds: [asm],
+          },
+        ],
+      });
     }
     fetchData();
   }, []);
