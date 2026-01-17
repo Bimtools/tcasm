@@ -88,7 +88,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <p>Assembly has been loaded!</p>
+        <p>Assembly has been loaded IBIM!</p>
       </header>
     </div>
   );
