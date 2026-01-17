@@ -74,6 +74,7 @@ function App() {
           entityIds: [asm],
         },
       ]);
+      console.log("zoom to object done");
       tcapi.viewer.setCamera({
         modelObjectIds: [
           {
