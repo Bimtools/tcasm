@@ -2,8 +2,12 @@ import logo from "./logo.svg";
 import "./App.css";
 import * as WorkspaceAPI from "trimble-connect-workspace-api";
 import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { GetDrawingRequest } from "./store/drawing/action";
 
 function App() {
+  const dispatch = useDispatch();
+  const drawings = useSelector((state) => state.drawing.payload);
   React.useEffect(() => {
     async function fetchData() {
       const url = window.location.href;
@@ -33,7 +37,9 @@ function App() {
           modelName.indexOf(".tekla") >= 0
         ) {
           const loadedModel = await tcapi.viewer.getLoadedModel(model.id);
+          console.log(loadedModel);
           if (loadedModel === undefined) {
+            console.log("Load model " + model.id);
             await tcapi.viewer.toggleModel(model.id, true, true);
           }
 
@@ -76,16 +82,16 @@ function App() {
           entityIds: [asm],
         },
       ]);
-      await tcapi.viewer.setCamera({
-        position: {
-          x: 1358.0000001497558,
-          y: 2231.9649982910159,
-          z: 111.12399997144837,
-        },
-        projectionType: "ortho",
-        yaw: Math.PI,
-        pitch: 0,
-      });
+      // await tcapi.viewer.setCamera({
+      //   position: {
+      //     x: 1358.0000001497558,
+      //     y: 2231.9649982910159,
+      //     z: 111.12399997144837,
+      //   },
+      //   projectionType: "ortho",
+      //   yaw: Math.PI,
+      //   pitch: 0,
+      // });
       await tcapi.viewer.setCamera({
         modelObjectIds: [
           {
@@ -95,9 +101,14 @@ function App() {
         ],
       });
       console.log("Zoom to object done");
-      await tcapi.viewer.toggleModel('j5V7h81tM00', true, false);
+      //await tcapi.viewer.toggleModel('j5V7h81tM00', true, false);
     }
     fetchData();
+    dispatch(
+      GetDrawingRequest({
+        id: "hJ02ssCrOk8",
+      }),
+    );
   }, []);
   return (
     <div className="App">
