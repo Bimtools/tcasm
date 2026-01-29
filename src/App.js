@@ -3,11 +3,25 @@ import "./App.css";
 import * as WorkspaceAPI from "trimble-connect-workspace-api";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { GetDrawingRequest } from "./store/drawing/action";
+import {
+  GetDrawingRequest,
+  UpdateViewVisibilityRequest,
+  GetTrbModelRequest,
+} from "./store/drawing/action";
+import {
+  ScissorOutlined,
+  EyeInvisibleFilled,
+  EyeFilled,
+} from "@ant-design/icons";
+import { Button, List, Typography } from "antd";
 
+const { Text } = Typography;
 function App() {
   const dispatch = useDispatch();
-  const drawings = useSelector((state) => state.drawing.payload);
+  const views = useSelector((state) => state.drawing.payload);
+  const trimBimModels = useSelector((state) => state.drawing.trbModels);
+  const loading = useSelector((state) => state.drawing.pending);
+
   React.useEffect(() => {
     async function fetchData() {
       const url = window.location.href;
@@ -65,8 +79,7 @@ function App() {
           }
         }
       }
-      console.log(asm);
-      console.log(modelId);
+      dispatch(GetTrbModelRequest(trimBimModels));
 
       await tcapi.viewer.setSelection({
         modelObjectIds: [
@@ -104,17 +117,79 @@ function App() {
       //await tcapi.viewer.toggleModel('j5V7h81tM00', true, false);
     }
     fetchData();
+
     dispatch(
       GetDrawingRequest({
-        id: "hJ02ssCrOk8",
+        id: "rKq83TRZB_Y",
       }),
     );
   }, []);
   return (
     <div className="App">
-      <header className="App-header">
-        <p>Assembly has been loaded!</p>
-      </header>
+      <List
+        dataSource={views}
+        loading={loading}
+        renderItem={(item) => (
+          <List.Item
+            key={item.key}
+            style={{
+              alignContent: "center",
+              height: "40px",
+              marginLeft: "5px",
+              marginRight: "5px",
+            }}
+          >
+            <Text
+              strong
+              style={{
+                marginLeft: "20px",
+              }}
+            >
+              {item.name}
+            </Text>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                columnGap: "2px",
+              }}
+            >
+              <Button
+                type="primary"
+                icon={item.show ? <EyeInvisibleFilled /> : <EyeFilled />}
+                onClick={async () => {
+                  dispatch(
+                    UpdateViewVisibilityRequest({
+                      ...item,
+                      show: !item.show,
+                    }),
+                  );
+                  const tcapi = await WorkspaceAPI.connect(window.parent);
+                  const trimBimModel = trimBimModels.find(
+                    (model) => item.file === model.name,
+                  );
+                  console.log(trimBimModel);
+                  if (trimBimModel === undefined) return;
+                  const loadedModel1 = await tcapi.viewer.getLoadedModel(
+                    trimBimModel.id,
+                  );
+                  if (loadedModel1 === undefined) {
+                    await tcapi.viewer.toggleModel(trimBimModel.id, true, true);
+                  }
+                  const modelObjects = await tcapi.viewer.getObjects();
+                  console.log(modelObjects);
+                }}
+              />
+              <Button
+                type="primary"
+                icon={<ScissorOutlined />}
+                onClick={() => {}}
+              />
+            </div>
+          </List.Item>
+        )}
+      />
     </div>
   );
 }
