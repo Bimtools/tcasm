@@ -2,6 +2,7 @@ import * as type from "./actionTypes";
 const initialState = {
   payload: [],
   trbModels: [],
+  annIds: [],
   pending: false,
   error: null,
 };
@@ -57,11 +58,21 @@ const reducers = (state = initialState, action) => {
         pending: false,
       };
     case type.GET_TRB_MODEL_SUCCESS:
-      console.log(action.payload);
       return {
         ...state,
         pending: false,
         trbModels: action.payload,
+      };
+    case type.GET_ANN_ID_REQUEST:
+      return {
+        ...state,
+        pending: true,
+      };
+    case type.GET_ANN_ID_SUCCESS:
+      return {
+        ...state,
+        pending: false,
+        annIds: [...state.annIds, action.payload],
       };
     default:
       return { ...state };

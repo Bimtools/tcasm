@@ -36,3 +36,15 @@ export function GetTrbModelSuccess(payload) {
     payload: payload,
   };
 }
+export function GetAnnIdRequest(payload) {
+  return {
+    type: actionType.GET_ANN_ID_REQUEST,
+    payload: payload,
+  };
+}
+export function GetAnnIdSuccess(payload) {
+  return {
+    type: actionType.GET_ANN_ID_SUCCESS,
+    payload: payload,
+  };
+}

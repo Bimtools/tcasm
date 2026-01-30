@@ -11,6 +11,7 @@ import {
   GetDrawingSuccess,
   UpdateViewVisibilitySuccess,
   GetTrbModelSuccess,
+  GetAnnIdSuccess,
 } from "./action";
 import instance from "../../interceptors/axios";
 
@@ -47,6 +48,28 @@ function* getDrawingSaga(action) {
   );
 }
 
+function* getAnnIdSaga(action) {
+  const getCommentUrl = `https://model-api31.connect.trimble.com/models/${action.payload.modelId}/entities?offset=0&include=psets&fields=psets`;
+  const response = yield call(instance.get, getCommentUrl);
+  const annIds = response.data.items.map((x) => {
+    if (x.psets.length > 0) {
+      const id = x.id;
+      const annValue = Number(x.psets[0].values[0]);
+      return { id: id, annId: annValue };
+    } else {
+      return { id: x.id, annId: -1 };
+    }
+  });
+  console.log(annIds);
+  yield put(
+    GetAnnIdSuccess({
+      name: action.payload.name,
+      modelId: action.payload.modelId,
+      annIds: annIds,
+    }),
+  );
+}
+
 function* updateViewVisibilitySaga(action) {
   yield put(
     UpdateViewVisibilitySuccess({
@@ -62,5 +85,6 @@ function* drawingSaga() {
   yield takeEvery("GET_DRAWING_REQUEST", getDrawingSaga);
   yield takeEvery("UPDATE_VIEW_VISIBILITY_REQUEST", updateViewVisibilitySaga);
   yield takeEvery("GET_TRB_MODEL_REQUEST", getTrbModelSaga);
+  yield takeEvery("GET_ANN_ID_REQUEST", getAnnIdSaga);
 }
 export default drawingSaga;
