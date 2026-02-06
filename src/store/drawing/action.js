@@ -48,3 +48,15 @@ export function GetAnnIdSuccess(payload) {
     payload: payload,
   };
 }
+export function ShowAnnRequest(payload) {
+  return {
+    type: actionType.SHOW_ANN_REQUEST,
+    payload: payload,
+  };
+}
+export function ShowAnnSuccess(payload) {
+  return {
+    type: actionType.SHOW_ANN_SUCCESS,
+    payload: payload,
+  };
+}

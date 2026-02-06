@@ -3,6 +3,7 @@ const initialState = {
   payload: [],
   trbModels: [],
   annIds: [],
+  showAnn: false,
   pending: false,
   error: null,
 };
@@ -73,6 +74,24 @@ const reducers = (state = initialState, action) => {
         ...state,
         pending: false,
         annIds: [...state.annIds, action.payload],
+      };
+    case type.SHOW_ANN_REQUEST:
+      return {
+        ...state,
+        pending: true,
+      };
+    case type.SHOW_ANN_SUCCESS:
+      const updatedPayload = state.payload.map((view) => {
+        return {
+          ...view,
+          show: !action.payload,
+        };
+      });
+      return {
+        ...state,
+        showAnn: action.payload,
+        payload: updatedPayload,
+        pending: false,
       };
     default:
       return { ...state };

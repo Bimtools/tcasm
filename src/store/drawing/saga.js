@@ -12,6 +12,7 @@ import {
   UpdateViewVisibilitySuccess,
   GetTrbModelSuccess,
   GetAnnIdSuccess,
+  ShowAnnSuccess,
 } from "./action";
 import instance from "../../interceptors/axios";
 
@@ -80,11 +81,17 @@ function* updateViewVisibilitySaga(action) {
 function* getTrbModelSaga(action) {
   yield put(GetTrbModelSuccess(action.payload));
 }
+function* showAnnSaga(action) {
+  yield put(
+    ShowAnnSuccess(action.payload),
+  );
+}
 
 function* drawingSaga() {
   yield takeEvery("GET_DRAWING_REQUEST", getDrawingSaga);
   yield takeEvery("UPDATE_VIEW_VISIBILITY_REQUEST", updateViewVisibilitySaga);
   yield takeEvery("GET_TRB_MODEL_REQUEST", getTrbModelSaga);
   yield takeEvery("GET_ANN_ID_REQUEST", getAnnIdSaga);
+  yield takeEvery("SHOW_ANN_REQUEST", showAnnSaga);
 }
 export default drawingSaga;

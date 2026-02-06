@@ -8,6 +8,7 @@ import {
   UpdateViewVisibilityRequest,
   GetTrbModelRequest,
   GetAnnIdRequest,
+  ShowAnnRequest,
 } from "./store/drawing/action";
 import {
   ScissorOutlined,
@@ -22,6 +23,7 @@ function App() {
   const views = useSelector((state) => state.drawing.payload);
   const trimBimModels = useSelector((state) => state.drawing.trbModels);
   const annIds = useSelector((state) => state.drawing.annIds);
+  const showAnn = useSelector((state) => state.drawing.showAnn);
   const loading = useSelector((state) => state.drawing.pending);
 
   React.useEffect(() => {
@@ -126,12 +128,43 @@ function App() {
 
     dispatch(
       GetDrawingRequest({
-        id: "rKq83TRZB_Y",
+        id: "CHKjXvb9a5E",
       }),
     );
   }, []);
   return (
     <div className="App">
+      <List>
+        <List.Item
+          style={{
+            marginLeft: "5px",
+            marginRight: "5px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              columnGap: "2px",
+            }}
+          >
+            <Button
+              type="primary"
+              icon={showAnn ? <EyeInvisibleFilled /> : <EyeFilled />}
+              onClick={async () => {
+                const tcapi = await WorkspaceAPI.connect(window.parent);
+                const annObjs = annIds.find((x) => x.name === views[0]?.file);
+                await tcapi.viewer.toggleModel(annObjs.modelId, showAnn, true);
+                dispatch(ShowAnnRequest(!showAnn));
+              }}
+            />
+            <Text ellipsis strong style={{ fontSize: "15px" }}>
+              {views[0]?.file}
+            </Text>
+          </div>
+        </List.Item>
+      </List>
       <List
         dataSource={views}
         loading={loading}
@@ -174,7 +207,7 @@ function App() {
                   );
                   console.log(item);
                   const annObjs = annIds.find((x) => x.name === item.file);
-                  await tcapi.viewer.toggleModel(annObjs.modelId, true, true);
+                  // await tcapi.viewer.toggleModel(annObjs.modelId, true, true);
                   const viewAnnIds = item.drawingObjects;
                   console.log(annObjs);
                   console.log(item.drawingObjects);
