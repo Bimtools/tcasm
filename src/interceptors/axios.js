@@ -36,6 +36,7 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.error("Request error", error);
     if (error.response && error.response.status === 401 && !error.config._retry) {
       error.config._retry = true;
       try {
@@ -44,10 +45,13 @@ instance.interceptors.response.use(
         const token = await tcapi.extension.requestPermission("accesstoken");
         if (token) {
           console.log("Get new token from server");
+          console.log(token);
           window.localStorage.setItem("trimbleToken", token);
-          error.config.headers["Authorization"] = "Bearer " + token;
-          error.config.baseURL = process.env.REACT_APP_TC_URL;
-          return instance(error.config);
+          const retryConfig = { ...error.config };
+          retryConfig.headers["Authorization"] = "Bearer " + token;
+          retryConfig.baseURL = process.env.REACT_APP_TC_URL;
+
+          return instance(retryConfig);
         }
       } catch (tokenError) {
         console.error("Failed to refresh token", tokenError);

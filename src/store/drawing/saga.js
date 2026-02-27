@@ -82,6 +82,7 @@ function* getTrbModelSaga(action) {
   yield put(GetTrbModelSuccess(action.payload));
 }
 function* showAnnSaga(action) {
+  console.log(action.payload);
   yield put(
     ShowAnnSuccess(action.payload),
   );

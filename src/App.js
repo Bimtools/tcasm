@@ -25,112 +25,114 @@ function App() {
   const annIds = useSelector((state) => state.drawing.annIds);
   const showAnn = useSelector((state) => state.drawing.showAnn);
   const loading = useSelector((state) => state.drawing.pending);
+  const [asm, setAsm] = useState();
+  const [modelId, setModelId] = useState();
 
-  React.useEffect(() => {
-    async function fetchData() {
-      const url = window.location.href;
-      const ifcGuid = url.split("?")[1];
-      if (!ifcGuid) {
-        return;
-      }
-      if (ifcGuid.length !== 22) {
-        return;
-      }
-      const tcapi = await WorkspaceAPI.connect(window.parent);
-      var models;
-      do {
-        models = await tcapi.viewer.getModels();
-      } while (models === undefined || models.length === 0);
-      var asm;
-
-      var trimBimModels = [];
-      var modelId;
-      for (const model of models) {
-        console.log(model);
-        const modelName = model.name;
-        if (modelName.indexOf(".trb") >= 0) {
-          dispatch(
-            GetAnnIdRequest({
-              name: model.name,
-              modelId: model.id,
-            }),
-          );
-        } else if (
-          modelName.indexOf(".ifc") >= 0 ||
-          modelName.indexOf(".tekla") >= 0
-        ) {
-          const loadedModel = await tcapi.viewer.getLoadedModel(model.id);
-          console.log(loadedModel);
-          if (loadedModel === undefined) {
-            console.log("Load model " + model.id);
-            await tcapi.viewer.toggleModel(model.id, true, true);
-          }
-
-          var modelObjects;
-          do {
-            modelObjects = await tcapi.viewer.getObjects();
-          } while (modelObjects === undefined || modelObjects.length === 0);
-          console.log(modelObjects);
-          const runtimeIds = await tcapi.viewer.convertToObjectRuntimeIds(
-            model.id,
-            [ifcGuid],
-          );
-          if (
-            runtimeIds !== undefined &&
-            runtimeIds.length > 0 &&
-            runtimeIds[0] >= 0
-          ) {
-            asm = runtimeIds[0];
-            modelId = model.id;
-            break;
-          } else {
-            await tcapi.viewer.toggleModel(model.id, false, true);
-          }
-        }
-      }
-
-      await tcapi.viewer.setSelection({
-        modelObjectIds: [
-          {
-            modelId: modelId,
-            objectRuntimeIds: [asm],
-          },
-        ],
-      });
-      await tcapi.viewer.isolateEntities([
-        {
-          modelId: modelId,
-          entityIds: [asm],
-        },
-      ]);
-      // await tcapi.viewer.setCamera({
-      //   position: {
-      //     x: 1358.0000001497558,
-      //     y: 2231.9649982910159,
-      //     z: 111.12399997144837,
-      //   },
-      //   projectionType: "ortho",
-      //   yaw: Math.PI,
-      //   pitch: 0,
-      // });
-      await tcapi.viewer.setCamera({
-        modelObjectIds: [
-          {
-            modelId: modelId,
-            objectRuntimeIds: [asm],
-          },
-        ],
-      });
-      console.log("Zoom to object done");
-      //await tcapi.viewer.toggleModel('j5V7h81tM00', true, false);
+  async function fetchData() {
+    const tcapi = await WorkspaceAPI.connect(window.parent);
+    const token = await tcapi.extension.requestPermission("accesstoken");
+    window.localStorage.setItem("trimbleToken", token);
+    const url = window.location.href;
+    const propertyString = url.split("?")[1];
+    const ifcGuid = propertyString?.split("ibim")[0];
+    const fId = propertyString?.split("ibim")[1];
+    if (!ifcGuid) {
+      return;
     }
-    fetchData();
-
+    if (ifcGuid.length !== 22) {
+      return;
+    }
+    if (!fId) {
+      return;
+    }
     dispatch(
       GetDrawingRequest({
-        id: "CHKjXvb9a5E",
+        id: fId,
       }),
     );
+
+    var models;
+    do {
+      models = await tcapi.viewer.getModels();
+    } while (models === undefined || models.length === 0);
+    var asm;
+
+    var modelId;
+    for (const model of models) {
+      const modelName = model.name;
+      if (modelName.indexOf(".trb") >= 0) {
+        dispatch(
+          GetAnnIdRequest({
+            name: model.name,
+            modelId: model.id,
+          }),
+        );
+      } else if (
+        modelName.indexOf(".ifc") >= 0 ||
+        modelName.indexOf(".tekla") >= 0
+      ) {
+        const loadedModel = await tcapi.viewer.getLoadedModel(model.id);
+        console.log(loadedModel);
+        if (loadedModel === undefined) {
+          await tcapi.viewer.toggleModel(model.id, true, true);
+        }
+        var modelObjects;
+        do {
+          modelObjects = await tcapi.viewer.getObjects();
+        } while (modelObjects === undefined || modelObjects.length === 0);
+        const runtimeIds = await tcapi.viewer.convertToObjectRuntimeIds(
+          model.id,
+          [ifcGuid],
+        );
+        if (
+          runtimeIds !== undefined &&
+          runtimeIds.length > 0 &&
+          runtimeIds[0] >= 0
+        ) {
+          asm = runtimeIds[0];
+          modelId = model.id;
+          break;
+        }
+      }
+    }
+    setAsm(asm);
+    setModelId(modelId);
+    await tcapi.viewer.setSelection({
+      modelObjectIds: [
+        {
+          modelId: modelId,
+          objectRuntimeIds: [asm],
+        },
+      ],
+    });
+    await tcapi.viewer.isolateEntities([
+      {
+        modelId: modelId,
+        entityIds: [asm],
+      },
+    ]);
+    // await tcapi.viewer.setCamera({
+    //   position: {
+    //     x: 1358.0000001497558,
+    //     y: 2231.9649982910159,
+    //     z: 111.12399997144837,
+    //   },
+    //   projectionType: "ortho",
+    //   yaw: Math.PI,
+    //   pitch: 0,
+    // });
+    await tcapi.viewer.setCamera({
+      modelObjectIds: [
+        {
+          modelId: modelId,
+          objectRuntimeIds: [asm],
+        },
+      ],
+    });
+  }
+
+  React.useEffect(() => {
+    fetchData();
   }, []);
   return (
     <div className="App">
@@ -155,8 +157,19 @@ function App() {
               onClick={async () => {
                 const tcapi = await WorkspaceAPI.connect(window.parent);
                 const annObjs = annIds.find((x) => x.name === views[0]?.file);
-                await tcapi.viewer.toggleModel(annObjs.modelId, showAnn, true);
-                dispatch(ShowAnnRequest(!showAnn));
+                const loadedModel = await tcapi.viewer.getLoadedModel(
+                  annObjs.modelId,
+                );
+                if (loadedModel === undefined) {
+                  await tcapi.viewer.toggleModel(
+                    annObjs.modelId,
+                    !showAnn,
+                    false,
+                  );
+                } else {
+                  await tcapi.viewer.toggleModel(annObjs.modelId, false, false);
+                }
+                dispatch(ShowAnnRequest(showAnn));
               }}
             />
             <Text ellipsis strong style={{ fontSize: "15px" }}>
@@ -205,27 +218,36 @@ function App() {
                       show: !item.show,
                     }),
                   );
-                  console.log(item);
-                  const annObjs = annIds.find((x) => x.name === item.file);
-                  // await tcapi.viewer.toggleModel(annObjs.modelId, true, true);
-                  const viewAnnIds = item.drawingObjects;
-                  console.log(annObjs);
-                  console.log(item.drawingObjects);
-                  const allAnnIds = annObjs.annIds;
-                  const annExtIdsToShow = [];
-                  const annExtIdsToHide = [];
-                  for (const x of allAnnIds) {
-                    if (viewAnnIds.indexOf(x.annId) >= 0) {
-                      annExtIdsToShow.push(x.id);
-                    } else {
-                      annExtIdsToHide.push(x.id);
-                    }
+                  console.log(views)
+                  const viewsTobeHidden = views.filter((x) => x.show === false);
+                  if(viewsTobeHidden.length === views.length) {
+                    await tcapi.viewer.toggleModel(item.modelId, false, false);
                   }
-                  var annRuntimeIds =
-                    await tcapi.viewer.convertToObjectRuntimeIds(
-                      annObjs.modelId,
-                      annExtIdsToShow,
-                    );
+                  const annObjs = annIds.find((x) => x.name === item.file);
+                  console.log(annObjs);
+                  // const viewAnnIds = item.drawingObjects;
+                  // console.log(annObjs);
+                  // console.log(item.drawingObjects);
+                  // const allAnnIds = annObjs.annIds;
+                  // const annExtIdsToShow = [];
+                  // const annExtIdsToHide = [];
+                  // for (const x of allAnnIds) {
+                  //   if (viewAnnIds.indexOf(x.annId) >= 0) {
+                  //     annExtIdsToShow.push(x.id);
+                  //   } else {
+                  //     annExtIdsToHide.push(x.id);
+                  //   }
+                  // }
+                  // var annRuntimeIdsShow =
+                  //   await tcapi.viewer.convertToObjectRuntimeIds(
+                  //     annObjs.modelId,
+                  //     annExtIdsToShow,
+                  //   );
+                  // var annRuntimeIdsHide =
+                  //   await tcapi.viewer.convertToObjectRuntimeIds(
+                  //     annObjs.modelId,
+                  //     annExtIdsToHide,
+                  //   );
                   // if (item.show) {
                   //   annRuntimeIds =
                   //     await tcapi.viewer.convertToObjectRuntimeIds(
@@ -239,19 +261,32 @@ function App() {
                   //       annExtIdsToShow,
                   //     );
                   // }
-                  tcapi.viewer.setObjectState(
-                    {
-                      modelObjectIds: [
-                        {
-                          modelId: annObjs.modelId,
-                          objectRuntimeIds: annRuntimeIds,
-                        },
-                      ],
-                    },
-                    {
-                      visible: item.show,
-                    },
-                  );
+                  // tcapi.viewer.setObjectState(
+                  //   {
+                  //     modelObjectIds: [
+                  //       {
+                  //         modelId: annObjs.modelId,
+                  //         objectRuntimeIds: annExtIdsToShow,
+                  //       },
+                  //     ],
+                  //   },
+                  //   {
+                  //     visible: true,
+                  //   },
+                  // );
+                  // tcapi.viewer.setObjectState(
+                  //   {
+                  //     modelObjectIds: [
+                  //       {
+                  //         modelId: annObjs.modelId,
+                  //         objectRuntimeIds: annRuntimeIdsHide,
+                  //       },
+                  //     ],
+                  //   },
+                  //   {
+                  //     visible: false,
+                  //   },
+                  // );
 
                   // const trimBimModel = trimBimModels.find(
                   //   (model) => item.file === model.name,

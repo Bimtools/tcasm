@@ -81,6 +81,7 @@ const reducers = (state = initialState, action) => {
         pending: true,
       };
     case type.SHOW_ANN_SUCCESS:
+      console.log("From reducer", action.payload);
       const updatedPayload = state.payload.map((view) => {
         return {
           ...view,
@@ -89,7 +90,7 @@ const reducers = (state = initialState, action) => {
       });
       return {
         ...state,
-        showAnn: action.payload,
+        showAnn: !action.payload,
         payload: updatedPayload,
         pending: false,
       };
