@@ -1,3 +1,0 @@
-[submodule "tcasm"]
-    path = tcasm
-    url = https://github.com/bimtools/tcasm.git  # Thay URL cho phù hợp
