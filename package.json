@@ -1,6 +1,6 @@
 {
-  "homepage": "https://Bimtools.github.io/asm/",
-  "name": "asm",
+  "homepage": "https://Bimtools.github.io/tcasm/",
+  "name": "tcasm",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
